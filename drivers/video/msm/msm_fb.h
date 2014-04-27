@@ -40,7 +40,7 @@
 
 #include <linux/msm_mdp.h>
 #ifdef CONFIG_HAS_EARLYSUSPEND
-#include <linux/earlysuspend.h>
+#undef CONFIG_HAS_EARLYSUSPEND
 #endif
 
 #include "msm_fb_panel.h"
@@ -67,7 +67,6 @@ struct msmfb_writeback_data_list {
 	struct msmfb_img img;
 	int state;
 };
-
 
 struct msm_fb_data_type {
 	__u32 key;
