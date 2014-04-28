@@ -55,16 +55,6 @@ static void bl_early_resume(struct early_suspend *h);
 #endif
 static struct i2c_client *lm3530_i2c_client;
 
-struct backlight_platform_data {
-	void (*platform_init)(void);
-	int gpio;
-	unsigned int mode;
-	int max_current;
-	int init_on_boot;
-	int min_brightness;
-	int max_brightness;
-};
-
 struct lm3530_device {
 	struct i2c_client *client;
 	struct backlight_device *bl_dev;
@@ -206,6 +196,20 @@ void lm3530_lcd_backlight_set_level( int level)
 	}
 }
 EXPORT_SYMBOL(lm3530_lcd_backlight_set_level);
+
+#ifdef CONFIG_LGIT_VIDEO_CABC
+void lm3530_lcd_backlight_pwm_disable(void)
+{
+	struct i2c_client *client = lm3530_i2c_client;
+	struct lm3530_device *dev = i2c_get_clientdata(client);
+
+	if (backlight_status == BL_OFF)
+		return;
+
+	lm3530_write_reg(client, 0x10, dev->max_current & 0x1F);
+}
+EXPORT_SYMBOL(lm3530_lcd_backlight_pwm_disable);
+#endif
 
 static int bl_set_intensity(struct backlight_device *bd)
 {

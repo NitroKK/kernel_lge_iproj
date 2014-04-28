@@ -346,6 +346,10 @@ static int mipi_lgit_lcd_off(struct platform_device *pdev)
 {
 	struct msm_fb_data_type *mfd;
 	mfd = platform_get_drvdata(pdev);
+#ifdef CONFIG_LGIT_VIDEO_CABC
+	if (mipi_lgit_pdata->bl_pwm_disable)
+		mipi_lgit_pdata->bl_pwm_disable();
+#endif
 	if (!mfd)
 		return -ENODEV;
 	if (mfd->key != MFD_KEY)

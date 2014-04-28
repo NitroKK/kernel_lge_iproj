@@ -216,6 +216,9 @@ static int mipi_lgit_backlight_level(int level, int max, int min)
 static struct msm_panel_common_pdata mipi_lgit_pdata = {
 	.backlight_level = mipi_lgit_backlight_level,
 	.panel_config_gpio = mipi_config_gpio,
+#ifdef CONFIG_LGIT_VIDEO_CABC
+	.bl_pwm_disable = lm3530_lcd_backlight_pwm_disable,
+#endif
 };
 
 static struct platform_device mipi_dsi_lgit_panel_device = {
@@ -398,16 +401,6 @@ static struct platform_device *panel_devices[] __initdata = {
 void __init msm_panel_init(void){
 	platform_add_devices(panel_devices, ARRAY_SIZE(panel_devices));
 }
-//                                                  
-struct backlight_platform_data {
-   void (*platform_init)(void);
-   int gpio;
-   unsigned int mode;
-   int max_current;
-   int init_on_boot;
-   int min_brightness;
-   int max_brightness;   
-};
 
 static struct backlight_platform_data lm3530_data = {
 	.gpio = 49,
