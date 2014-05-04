@@ -21,6 +21,7 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/platform_device.h>
+#include <linux/platform_data/lm35xx_bl.h>
 #include <linux/kernel.h>
 #include <linux/spinlock.h>
 #include <linux/backlight.h>
@@ -154,7 +155,9 @@ void lm3530_backlight_on(int level)
 
 		lm3530_write_reg(main_lm3530_dev->client, 0xA0, 0x00); //reset 0 brightness
 		lm3530_write_reg(main_lm3530_dev->client, 0x10, main_lm3530_dev->max_current);
+#ifndef CONFIG_LGIT_VIDEO_CABC
 		lm3530_write_reg(main_lm3530_dev->client, 0x30, 0x2d); //fade in, out
+#endif
 	}
 
 	lm3530_set_main_current_level(main_lm3530_dev->client, level);
@@ -209,6 +212,12 @@ void lm3530_lcd_backlight_pwm_disable(void)
 	lm3530_write_reg(client, 0x10, dev->max_current & 0x1F);
 }
 EXPORT_SYMBOL(lm3530_lcd_backlight_pwm_disable);
+
+int lm3530_lcd_backlight_on_status(void)
+{
+	return backlight_status;
+}
+EXPORT_SYMBOL(lm3530_lcd_backlight_on_status);
 #endif
 
 static int bl_set_intensity(struct backlight_device *bd)

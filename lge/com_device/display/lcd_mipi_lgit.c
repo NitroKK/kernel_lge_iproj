@@ -367,6 +367,13 @@ static int mipi_lgit_lcd_off(struct platform_device *pdev)
 	return 0;	
 }
 
+#ifdef CONFIG_LGIT_VIDEO_CABC
+static int mipi_lgit_backlight_on_status(void)
+{
+	return (mipi_lgit_pdata->bl_on_status());
+}
+#endif
+
 static void mipi_lgit_set_backlight_board(struct msm_fb_data_type *mfd) 
 {
 	int level;	
@@ -400,6 +407,9 @@ static struct msm_fb_panel_data lgit_panel_data = {
 	.on		= mipi_lgit_lcd_on,
 	.off		= mipi_lgit_lcd_off,
 	.set_backlight = mipi_lgit_set_backlight_board,
+#ifdef CONFIG_LGIT_VIDEO_CABC
+	.get_backlight_on_status = mipi_lgit_backlight_on_status,
+#endif
 };
 
 static int ch_used[3];

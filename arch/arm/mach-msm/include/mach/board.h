@@ -425,21 +425,8 @@ struct msm_panel_common_pdata {
 	char mdp_iommu_split_domain;
 #ifdef CONFIG_LGIT_VIDEO_CABC
 	void (*bl_pwm_disable)(void);
+	int (*bl_on_status)(void);
 #endif
-};
-
-#ifdef CONFIG_LGIT_VIDEO_CABC
-void lm3530_lcd_backlight_pwm_disable(void);
-#endif
-
-struct backlight_platform_data {
-   void (*platform_init)(void);
-   int gpio;
-   unsigned int mode;
-   int max_current;
-   int init_on_boot;
-   int min_brightness;
-   int max_brightness;   
 };
 
 struct lcdc_platform_data {

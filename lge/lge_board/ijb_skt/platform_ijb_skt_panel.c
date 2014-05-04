@@ -32,7 +32,7 @@
 #include <mach/msm_memtypes.h>
 #include <mach/board.h>
 #include <mach/msm_bus_board.h>
-
+#include <linux/platform_data/lm35xx_bl.h>
 #include <linux/i2c.h>
 #include <linux/msm_ion.h>
 #include <mach/ion.h>
@@ -218,6 +218,7 @@ static struct msm_panel_common_pdata mipi_lgit_pdata = {
 	.panel_config_gpio = mipi_config_gpio,
 #ifdef CONFIG_LGIT_VIDEO_CABC
 	.bl_pwm_disable = lm3530_lcd_backlight_pwm_disable,
+	.bl_on_status = lm3530_lcd_backlight_on_status,
 #endif
 };
 
