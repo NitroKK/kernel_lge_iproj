@@ -59,6 +59,13 @@ config EARLYSUSPEND
 	  Call early suspend handlers when the user requested sleep state
 	  changes.
 
+config POWERSUSPEND
+	bool "Power suspend"
+	default y
+	---help---
+	  Call early suspend handlers when the user requested sleep state
+	  changes.
+
 choice
 	prompt "User-space screen access"
 	default FB_EARLYSUSPEND if !FRAMEBUFFER_CONSOLE
