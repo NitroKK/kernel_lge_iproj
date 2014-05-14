@@ -83,7 +83,7 @@
 #define ZYXDA_MASK		0x08
 #define OUT_X_L			0x28 /* X-axis acceleration data */
 #define OUT_X_H			0x29
-//#define OUT_Y_L			0x2A /* Y-axis acceleration data */
+
 #define OUT_Y_H			0x2B
 #define OUT_Z_L			0x2C /* Z-axis acceleration data */
 #define OUT_Z_H			0x2D
@@ -236,7 +236,8 @@ static int k3g_read_gyro_values(struct i2c_client *client,
 	int err;
 	struct i2c_msg msg[2];
 	u8 reg_buf;
-	u8 gyro_data[sizeof(*data) * (total_read ? (total_read - 1) : 1)];
+	int len = sizeof(*data) * (total_read ? (total_read - 1) : 1);
+	u8 gyro_data[sizeof(struct k3g_t) * 32];
 	struct k3g_platform_data *pdata;
 	s16 tmp_xyz[3];
 
@@ -259,7 +260,7 @@ static int k3g_read_gyro_values(struct i2c_client *client,
 
 	if (total_read > 1) {
 		reg_buf = AXISDATA_REG | AC;
-		msg[1].len = sizeof(gyro_data);
+		msg[1].len = len;
 
 		err = i2c_transfer(client->adapter, msg, 2);
 		if (err != 2)
@@ -436,7 +437,7 @@ static ssize_t k3g_set_enable(struct device *dev,
 		new_enable = true;
 		if(DEBUG_FUNC_TRACE & debug_mask||DEBUG_DEBUG_SYSFS & debug_mask)		
 			printk(KERN_INFO "%s: line %d - enable\n", __func__, __LINE__);
-    }
+	}
 	else if (sysfs_streq(buf, "0"))
 	{
 		new_enable = false;
@@ -853,8 +854,7 @@ static ssize_t k3g_run_self_test(struct device *dev,
 		goto exit_self_test;
 	}
 
-	//wait for 3*ODR
-	mdelay(50); //mdelay(15);
+	mdelay(50);
 
 	while(j < NUM_SAMPLE)
 	{
@@ -967,7 +967,6 @@ exit_self_test:
 	if(err < 0){
 		err = -EIO;
 		printk(KERN_ERR "[%s, %d] exit: Error during writing 0x02 on CTRL_REG5\n",TAG_ST,__LINE__);
-		//goto exit;
 	}
 
 	/* Disable Self Test */
@@ -975,7 +974,6 @@ exit_self_test:
 	if(err < 0){
 		err = -EIO;
 		printk(KERN_ERR "[%s, %d] exit: Error during writing 0x02 on CTRL_REG5\n",TAG_ST,__LINE__);
-		//goto exit;
 	}
 
 	mutex_unlock(&k3g_data->lock);
@@ -1091,7 +1089,6 @@ static int k3g_probe(struct i2c_client *client,
 		}
 		goto err_read_reg;
 	}
-
 
 	mutex_init(&data->lock);
 
@@ -1312,14 +1309,10 @@ static int k3g_suspend(struct device *dev)
 		mutex_unlock(&k3g_data->lock);
 	}
 		if(pdata->power_off){
-		//if(pdata->check_power_off_valid(SENSOR_TYPE_GYROSCOPE))
-		{
 			if(DEBUG_GEN_INFO & debug_mask)
 				printk(KERN_INFO "%s: goes to suspend, power off\n", __func__);
-			//k3g_data->enable = 0;
 			pdata->power_off(1<<SENSOR_TYPE_GYROSCOPE);
-		}	
-	}	
+	}
 
 	return err;
 }
