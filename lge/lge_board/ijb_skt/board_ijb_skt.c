@@ -1845,6 +1845,7 @@ static struct msm_serial_hs_platform_data msm_uart_dm1_pdata = {
        .inject_rx_on_wakeup = 1,
        .rx_to_inject = 0xFD,
        .gpio_config = configure_uart_gpios,
+       .uartdm_rx_buf_size = 1024,
 };
 #endif
 
