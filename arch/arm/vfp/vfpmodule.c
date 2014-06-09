@@ -634,18 +634,7 @@ int vfp_restore_user_hwstate(struct user_vfp __user *ufp,
 	return err ? -EFAULT : 0;
 }
 
-/*
- * VFP hardware can lose all context when a CPU goes offline.
- * As we will be running in SMP mode with CPU hotplug, we will save the
- * hardware state at every thread switch.  We clear our held state when
- * a CPU has been killed, indicating that the VFP hardware doesn't contain
- * a threads VFP state.  When a CPU starts up, we re-enable access to the
- * VFP hardware.
- *
- * Both CPU_DYING and CPU_STARTING are called on the CPU which
- * is being offlined/onlined.
- */
-
+#ifdef CONFIG_KERNEL_MODE_NEON
 void vfp_kmode_exception(void)
 {
 	/*
@@ -665,7 +654,7 @@ void vfp_kmode_exception(void)
 	else
 		pr_crit("BUG: FP instruction issued in kernel mode with FP unit disabled\n");
 }
-
+#endif
 /*
  * VFP hardware can lose all context when a CPU goes offline.
  * As we will be running in SMP mode with CPU hotplug, we will save the
@@ -708,7 +697,6 @@ static int proc_read_status(char *page, char **start, off_t off, int count,
 #endif
 
 #ifdef CONFIG_KERNEL_MODE_NEON
-
 /*
  * Kernel-side NEON support functions
  */
@@ -750,7 +738,6 @@ void kernel_neon_end(void)
 	put_cpu();
 }
 EXPORT_SYMBOL(kernel_neon_end);
-
 #endif /* CONFIG_KERNEL_MODE_NEON */
 
 /*
@@ -761,8 +748,11 @@ static int __init vfp_init(void)
 	unsigned int vfpsid;
 	unsigned int cpu_arch = cpu_architecture();
 #ifdef CONFIG_PROC_FS
+#ifndef CONFIG_KERNEL_MODE_NEON
 	static struct proc_dir_entry *procfs_entry;
 #endif
+#endif
+
 	if (cpu_arch >= CPU_ARCH_ARMv6)
 		on_each_cpu(vfp_enable, NULL, 1);
 
@@ -831,8 +821,17 @@ static int __init vfp_init(void)
 				elf_hwcap |= HWCAP_VFPv4;
 		}
 	}
+#ifdef CONFIG_KERNEL_MODE_NEON
+	return 0;
+}
 
+static int __init vfp_rootfs_init(void)
+{
+#endif
 #ifdef CONFIG_PROC_FS
+#ifdef CONFIG_KERNEL_MODE_NEON
+	static struct proc_dir_entry *procfs_entry;
+#endif
 	procfs_entry = create_proc_entry("cpu/vfp_bounce", S_IRUGO, NULL);
 
 	if (procfs_entry)
@@ -843,5 +842,9 @@ static int __init vfp_init(void)
 
 	return 0;
 }
-
+#ifdef CONFIG_KERNEL_MODE_NEON
 core_initcall(vfp_init);
+rootfs_initcall(vfp_rootfs_init);
+#else
+late_initcall(vfp_init);
+#endif
