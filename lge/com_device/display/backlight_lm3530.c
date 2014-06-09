@@ -44,16 +44,6 @@ extern uint16_t battery_info_get(void);
 __attribute__((weak)) int usb_cable_info;
 #endif
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-#include <linux/earlysuspend.h>
-static struct {
-   struct early_suspend bl_lm3530_early_suspend;
-   short suspended;
-} lm3530_suspension;
-
-static void bl_early_suspend(struct early_suspend *h);
-static void bl_early_resume(struct early_suspend *h);
-#endif
 static struct i2c_client *lm3530_i2c_client;
 
 struct lm3530_device {
@@ -147,17 +137,13 @@ static void lm3530_set_main_current_level(struct i2c_client *client, int level)
 
 void lm3530_backlight_on(int level)
 {
-	if (lm3530_suspension.suspended)
-		return;
 
 	if(backlight_status == BL_OFF){
 		lm3530_hw_reset();
 
 		lm3530_write_reg(main_lm3530_dev->client, 0xA0, 0x00); //reset 0 brightness
 		lm3530_write_reg(main_lm3530_dev->client, 0x10, main_lm3530_dev->max_current);
-#ifndef CONFIG_LGIT_VIDEO_CABC
 		lm3530_write_reg(main_lm3530_dev->client, 0x30, 0x2d); //fade in, out
-#endif
 	}
 
 	lm3530_set_main_current_level(main_lm3530_dev->client, level);
@@ -199,26 +185,6 @@ void lm3530_lcd_backlight_set_level( int level)
 	}
 }
 EXPORT_SYMBOL(lm3530_lcd_backlight_set_level);
-
-#ifdef CONFIG_LGIT_VIDEO_CABC
-void lm3530_lcd_backlight_pwm_disable(void)
-{
-	struct i2c_client *client = lm3530_i2c_client;
-	struct lm3530_device *dev = i2c_get_clientdata(client);
-
-	if (backlight_status == BL_OFF)
-		return;
-
-	lm3530_write_reg(client, 0x10, dev->max_current & 0x1F);
-}
-EXPORT_SYMBOL(lm3530_lcd_backlight_pwm_disable);
-
-int lm3530_lcd_backlight_on_status(void)
-{
-	return backlight_status;
-}
-EXPORT_SYMBOL(lm3530_lcd_backlight_on_status);
-#endif
 
 static int bl_set_intensity(struct backlight_device *bd)
 {
@@ -305,24 +271,6 @@ static struct backlight_ops lm3530_bl_ops = {
 	.get_brightness = bl_get_intensity,
 };
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-static void bl_early_suspend(struct early_suspend *h)
-{
-	if (!lm3530_suspension.suspended) {
-		lm3530_backlight_off();
-		lm3530_suspension.suspended = 1;
-	}
-}
-
-static void bl_early_resume(struct early_suspend *h)
-{
-	if (lm3530_suspension.suspended) {
-		lm3530_suspension.suspended = 0;
-		lm3530_backlight_on(saved_main_lcd_level);
-	}
-}
-#endif
-
 static int lm3530_probe(struct i2c_client *i2c_dev, const struct i2c_device_id *id)
 {
 	struct backlight_platform_data *pdata;
@@ -370,15 +318,6 @@ static int lm3530_probe(struct i2c_client *i2c_dev, const struct i2c_device_id *
 
 	err = device_create_file(&i2c_dev->dev, &dev_attr_lm3530_level);
 	err = device_create_file(&i2c_dev->dev, &dev_attr_lm3530_backlight_on_off);
-
-#ifdef CONFIG_HAS_EARLYSUSPEND
-        lm3530_suspension.bl_lm3530_early_suspend.level = EARLY_SUSPEND_LEVEL_DISABLE_FB;
-        lm3530_suspension.bl_lm3530_early_suspend.suspend = bl_early_suspend;
-        lm3530_suspension.bl_lm3530_early_suspend.resume = bl_early_resume;
-        register_early_suspend(&lm3530_suspension.bl_lm3530_early_suspend);
-	lm3530_suspension.suspended = 0;
-#endif
-
 	lm3530_hw_reset();
 	return 0;
 }

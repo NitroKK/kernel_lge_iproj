@@ -423,10 +423,6 @@ struct msm_panel_common_pdata {
 #endif
 	char cont_splash_enabled;
 	char mdp_iommu_split_domain;
-#ifdef CONFIG_LGIT_VIDEO_CABC
-	void (*bl_pwm_disable)(void);
-	int (*bl_on_status)(void);
-#endif
 };
 
 struct lcdc_platform_data {

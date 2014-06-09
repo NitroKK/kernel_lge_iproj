@@ -15,12 +15,6 @@
 #ifndef __LM35XX_BL_H
 #define __LM35XX_BL_H
 
-#ifdef CONFIG_LGIT_VIDEO_CABC
-void lm3530_lcd_backlight_set_level(int level);
-void lm3530_lcd_backlight_pwm_disable(void);
-int lm3530_lcd_backlight_on_status(void);
-#endif
-
 struct backlight_platform_data {
 	void (*platform_init)(void);
 	int gpio;
@@ -29,11 +23,6 @@ struct backlight_platform_data {
 	int init_on_boot;
 	int min_brightness;
 	int max_brightness;
-#ifndef CONFIG_LGIT_VIDEO_CABC
-	int default_brightness;
-	char *blmap;
-	int blmap_size;
-#endif
 };
 
 #endif

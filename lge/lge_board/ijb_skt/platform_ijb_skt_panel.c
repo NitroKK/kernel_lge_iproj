@@ -216,10 +216,6 @@ static int mipi_lgit_backlight_level(int level, int max, int min)
 static struct msm_panel_common_pdata mipi_lgit_pdata = {
 	.backlight_level = mipi_lgit_backlight_level,
 	.panel_config_gpio = mipi_config_gpio,
-#ifdef CONFIG_LGIT_VIDEO_CABC
-	.bl_pwm_disable = lm3530_lcd_backlight_pwm_disable,
-	.bl_on_status = lm3530_lcd_backlight_on_status,
-#endif
 };
 
 static struct platform_device mipi_dsi_lgit_panel_device = {

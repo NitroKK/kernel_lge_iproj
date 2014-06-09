@@ -26,14 +26,6 @@ config MSM_ION_FREE
 	---help---
 	Patch for ION free for LGE MSM8660
 
-config LGIT_VIDEO_CABC
-	bool "Content Adaptive Backlight Control on LGIT Panel"
-	default y
-	depends on LGE_DISPLAY_MIPI_LGIT_IJB_VIDEO_HD_PT
-	help
-	  Enable CABC(Content Apaptive Backlight Control) on LGIT Panel
-	  to reduce power consumption
-
 endmenu
 
 menu "Features"

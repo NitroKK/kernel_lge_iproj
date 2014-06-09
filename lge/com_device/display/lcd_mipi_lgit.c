@@ -267,13 +267,13 @@ extern int mipi_lgit_lcd_ief_off(void)
 		mutex_lock(&local_mfd0->dma->ov_mutex);
 		MIPI_OUTP(MIPI_DSI_BASE + 0x38, 0x10000000);//HS mode
 		mipi_dsi_cmds_tx(&lgit_tx_buf, lgit_power_on_set_camera, ARRAY_SIZE(lgit_power_on_set_camera));
-			
+
 		is_ief_on = 0;
 		printk("%s, %d\n", __func__,is_ief_on);
 		MIPI_OUTP(MIPI_DSI_BASE + 0x38, 0x14000000);//LP mode
 		mutex_unlock(&local_mfd0->dma->ov_mutex);
 	}
-                                                                                         
+
 	return 0;
 } 
 EXPORT_SYMBOL(mipi_lgit_lcd_ief_off);
@@ -284,13 +284,13 @@ extern int mipi_lgit_lcd_ief_on(void)
 		mutex_lock(&local_mfd0->dma->ov_mutex);
 		MIPI_OUTP(MIPI_DSI_BASE + 0x38, 0x10000000);//HS mode
 		mipi_dsi_cmds_tx(&lgit_tx_buf, lgit_power_off_set_camera, ARRAY_SIZE(lgit_power_off_set_camera)); 
-							
+
 		is_ief_on = 1;
 		printk("%s, %d\n", __func__,is_ief_on);
 		MIPI_OUTP(MIPI_DSI_BASE + 0x38, 0x14000000); //LP mode
 		mutex_unlock(&local_mfd0->dma->ov_mutex);
 	}
-                                                              
+
 	return 0;                                                                             
 } 
 EXPORT_SYMBOL(mipi_lgit_lcd_ief_on);
@@ -346,10 +346,6 @@ static int mipi_lgit_lcd_off(struct platform_device *pdev)
 {
 	struct msm_fb_data_type *mfd;
 	mfd = platform_get_drvdata(pdev);
-#ifdef CONFIG_LGIT_VIDEO_CABC
-	if (mipi_lgit_pdata->bl_pwm_disable)
-		mipi_lgit_pdata->bl_pwm_disable();
-#endif
 	if (!mfd)
 		return -ENODEV;
 	if (mfd->key != MFD_KEY)
@@ -366,13 +362,6 @@ static int mipi_lgit_lcd_off(struct platform_device *pdev)
 	
 	return 0;	
 }
-
-#ifdef CONFIG_LGIT_VIDEO_CABC
-static int mipi_lgit_backlight_on_status(void)
-{
-	return (mipi_lgit_pdata->bl_on_status());
-}
-#endif
 
 static void mipi_lgit_set_backlight_board(struct msm_fb_data_type *mfd) 
 {
@@ -407,9 +396,6 @@ static struct msm_fb_panel_data lgit_panel_data = {
 	.on		= mipi_lgit_lcd_on,
 	.off		= mipi_lgit_lcd_off,
 	.set_backlight = mipi_lgit_set_backlight_board,
-#ifdef CONFIG_LGIT_VIDEO_CABC
-	.get_backlight_on_status = mipi_lgit_backlight_on_status,
-#endif
 };
 
 static int ch_used[3];
