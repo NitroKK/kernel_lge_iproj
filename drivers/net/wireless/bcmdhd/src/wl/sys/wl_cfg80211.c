@@ -264,13 +264,11 @@ static s32 wl_cfg80211_get_key(struct wiphy *wiphy, struct net_device *dev,
 static s32 wl_cfg80211_config_default_mgmt_key(struct wiphy *wiphy,
 	struct net_device *dev,	u8 key_idx);
 static s32 wl_cfg80211_resume(struct wiphy *wiphy);
-#if 0 || (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0))
 static s32 wl_cfg80211_mgmt_tx_cancel_wait(struct wiphy *wiphy,
 	struct net_device *dev, u64 cookie);
 #ifndef CUSTOMER_HW4
 static s32 wl_cfg80211_del_station(struct wiphy *wiphy,
 	struct net_device *ndev, u8* mac_addr);
-#endif
 #endif
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 39)
 static s32 wl_cfg80211_suspend(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
@@ -1040,6 +1038,11 @@ wl_cfg80211_add_virtual_iface(struct wiphy *wiphy, char *name,
 	/* Use primary I/F for sending cmds down to firmware */
 	_ndev = wl_to_prmry_ndev(wl);
 
+    if (wl_get_drv_status(wl, CONNECTING, _ndev)) {
+            WL_ERR(("Already AP connection going on\n"));
+            return -EBUSY;
+    }
+
 	WL_DBG(("if name: %s, type: %d\n", name, type));
 	switch (type) {
 	case NL80211_IFTYPE_ADHOC:
@@ -1312,6 +1315,9 @@ wl_cfg80211_del_virtual_iface(struct wiphy *wiphy, struct net_device *dev)
 				WL_ERR(("IFDEL didn't complete properly\n"));
 			}
 			ret = dhd_del_monitor(dev);
+			if (wl_get_mode_by_netdev(wl, dev) == WL_MODE_AP) {
+				DHD_OS_WAKE_LOCK_CTRL_TIMEOUT_CANCEL((dhd_pub_t *)(wl->pub));
+			}
 		}
 	}
 	return ret;
@@ -6319,6 +6325,8 @@ wl_cfg80211_stop_ap(
 		wldev_iovar_setint(dev, "mpc", 1);
 	} else {
 		WL_DBG(("Stopping P2P GO \n"));
+		DHD_OS_WAKE_LOCK_CTRL_TIMEOUT_ENABLE((dhd_pub_t *)(wl->pub), DHD_EVENT_TIMEOUT_MS*3);
+		DHD_OS_WAKE_LOCK_TIMEOUT((dhd_pub_t *)(wl->pub));
 	}
 
 exit:
@@ -6622,6 +6630,7 @@ static struct cfg80211_ops wl_cfg80211_ops = {
 	.mgmt_frame_register = wl_cfg80211_mgmt_frame_register,
 	.change_bss = wl_cfg80211_change_bss,
 	.set_channel = wl_cfg80211_set_channel,
+	.mgmt_tx_cancel_wait = wl_cfg80211_mgmt_tx_cancel_wait,
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 4, 0)
 	.set_beacon = wl_cfg80211_add_set_beacon,
 	.add_beacon = wl_cfg80211_add_set_beacon,
@@ -6689,7 +6698,7 @@ static s32 wl_setup_wiphy(struct wireless_dev *wdev, struct device *sdiofunc_dev
 		| BIT(NL80211_IFTYPE_AP);
 
 	wdev->wiphy->bands[IEEE80211_BAND_2GHZ] = &__wl_band_2ghz;
-
+	wdev->wiphy->bands[IEEE80211_BAND_5GHZ] = &__wl_band_5ghz_a;
 	wdev->wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
 	wdev->wiphy->cipher_suites = __wl_cipher_suites;
 	wdev->wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
@@ -10659,7 +10668,7 @@ void wl_cfg80211_enable_trace(bool set, u32 level)
 	else
 		wl_dbg_level |= (WL_DBG_LEVEL & level);
 }
-#if 0 || (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0))
+
 static s32
 wl_cfg80211_mgmt_tx_cancel_wait(struct wiphy *wiphy,
 	struct net_device *dev, u64 cookie)
@@ -10672,7 +10681,6 @@ wl_cfg80211_mgmt_tx_cancel_wait(struct wiphy *wiphy,
 
 	return 0;
 }
-#endif /* WL_SUPPORT_BACKPORTED_PATCHES || KERNEL >= 3.2.0 */
 
 #ifdef WL11U
 bcm_tlv_t *
