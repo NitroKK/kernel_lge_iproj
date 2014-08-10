@@ -53,10 +53,6 @@
 #include "mdp.h"
 #include "mdp4.h"
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-#undef CONFIG_HAS_EARLYSUSPEND
-#endif
-
 #ifdef CONFIG_FB_MSM_LOGO
 #ifdef CONFIG_LGE_I_DISP_BOOTLOGO
 static int saved_bl_level = 0x33;
